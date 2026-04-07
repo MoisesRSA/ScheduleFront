@@ -47,7 +47,7 @@ export default function Dashboard({ setAuth }) {
   // Buscar agendamentos reais do Java
   const fetchBookings = async () => {
     try {
-      const res = await fetch("http://localhost:8081/booking/all", {
+      const res = await fetch("https://schedule-yi98.onrender.com/booking/all", {
         headers: { "Authorization": "Bearer " + localStorage.getItem("my_token") }
       });
       if (res.ok) {
@@ -107,7 +107,7 @@ export default function Dashboard({ setAuth }) {
           status: "SCHEDULED"
       };
 
-      const res = await fetch("http://localhost:8081/booking/create", {
+      const res = await fetch("https://schedule-yi98.onrender.com/booking/create", {
         method: "POST",
         headers: { 
           "Authorization": "Bearer " + localStorage.getItem("my_token"),

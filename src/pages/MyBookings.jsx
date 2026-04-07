@@ -21,7 +21,7 @@ export default function MyBookings({ setAuth }) {
 
   const fetchMyBookings = async () => {
     try {
-      const res = await fetch("http://localhost:8081/booking/all", {
+      const res = await fetch("https://schedule-yi98.onrender.com/booking/all",  {
         headers: {
            "Authorization": "Bearer " + localStorage.getItem("my_token")
         }
@@ -43,14 +43,13 @@ export default function MyBookings({ setAuth }) {
     if (!window.confirm("Atenção! Você deseja realmente cancelar este agendamento? Esta ação não pode ser desfeita.")) return;
 
     try {
-      const res = await fetch(`http://localhost:8081/booking/delete/${id}`, {
+      const res = await fetch(`https://schedule-yi98.onrender.com/booking/delete/${id}`, {
         method: "DELETE",
         headers: {
            "Authorization": "Bearer " + localStorage.getItem("my_token")
         }
       });
       if (res.ok) {
-        // Remove locally directly to feel snappy
         setMyBookings(prev => prev.filter(b => b.id !== id));
       } else {
         alert("Erro ao cancelar o agendamento.");

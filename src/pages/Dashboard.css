@@ -3,7 +3,7 @@
   min-height: 100vh;
   width: 100vw;
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* desktop only — overridden on mobile */
 }
 
 .bg-gradient-top {
@@ -281,13 +281,16 @@
 @media (max-width: 768px) {
   .dashboard-layout {
     flex-direction: column;
-    overflow: visible;
+    overflow: hidden; /* keep hidden but we don't use fixed anymore */
+    height: 100dvh; /* full viewport height as a flex column container */
   }
 
   .dashboard-main {
-    padding: 12px 12px 100px; /* bottom padding for the bottom nav bar */
+    padding: 12px 12px 12px;
+    flex: 1;
     height: auto;
-    overflow-y: visible;
+    overflow-y: auto;
+    order: 1; /* Content above the bottom nav */
   }
 
   .dashboard-content {

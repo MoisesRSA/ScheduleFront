@@ -165,36 +165,46 @@ export default function Dashboard({ setAuth }) {
           <div className="timeline-container glass-card">
             <div className="timeline-grid">
               
+              {/* Header row: corner + resource names */}
               <div className="timeline-cell header-cell corner"></div>
-
               {RESOURCES.map(res => (
                 <div key={res.id} className="timeline-cell header-cell resource-header">
                   {res.name}
                 </div>
               ))}
 
-              {HOURS.map(hour => (
-                <div key={hour} className="timeline-row" style={{ display: 'contents' }}>
-                  <div className="timeline-cell time-label">
-                    {hour.toString().padStart(2, '0')}:00
-                  </div>
+              {/* Data rows: rendered per-resource with explicit grid positioning */}
+              {HOURS.map((hour, rowIndex) => {
+                // gridRow: +2 because row 1 is the header
+                const gridRow = rowIndex + 2;
 
-                  {RESOURCES.map(res => {
+                return [
+                  // Time label — always rendered
+                  <div
+                    key={`time-${hour}`}
+                    className="timeline-cell time-label"
+                    style={{ gridColumn: 1, gridRow }}
+                  >
+                    {hour.toString().padStart(2, '0')}:00
+                  </div>,
+
+                  // Resource cells
+                  ...RESOURCES.map((res, colIndex) => {
+                    const gridColumn = colIndex + 2; // +2 because col 1 is time-label
+
                     const booking = dailyBookings.find(
                       b => b.location === res.id && new Date(b.startTime).getHours() === hour
                     );
-                    
-                    const isCovered = dailyBookings.some(
-                      b => {
-                        const startH = new Date(b.startTime).getHours();
-                        const endH = new Date(b.endTime).getHours();
-                        return b.location === res.id && startH < hour && endH > hour;
-                      }
-                    );
 
-                    if (isCovered) {
-                      return <div key={res.id + hour} className="timeline-cell covered-cell"></div>;
-                    }
+                    const isCovered = dailyBookings.some(b => {
+                      const startH = new Date(b.startTime).getHours();
+                      const endH = new Date(b.endTime).getHours();
+                      return b.location === res.id && startH < hour && endH > hour;
+                    });
+
+                    // Célula coberta por um agendamento multi-hora: não renderizar
+                    // O booked-cell com span já ocupa esse espaço
+                    if (isCovered) return null;
 
                     if (booking) {
                       const startH = new Date(booking.startTime).getHours();
@@ -202,7 +212,11 @@ export default function Dashboard({ setAuth }) {
                       const duration = Math.max(endH - startH, 1);
 
                       return (
-                        <div key={res.id + hour} className="timeline-cell booked-cell" style={{ gridRowEnd: `span ${duration}` }}>
+                        <div
+                          key={`${res.id}-${hour}`}
+                          className="timeline-cell booked-cell"
+                          style={{ gridColumn, gridRow, gridRowEnd: `span ${duration}` }}
+                        >
                           <div className="booking-block glass-panel">
                             <strong>Ocupado</strong>
                             <span>{booking.description || 'Reunião'}</span>
@@ -212,16 +226,17 @@ export default function Dashboard({ setAuth }) {
                     }
 
                     return (
-                      <div 
-                        key={res.id + hour} 
-                        className="timeline-cell empty-slot" 
+                      <div
+                        key={`${res.id}-${hour}`}
+                        className="timeline-cell empty-slot"
+                        style={{ gridColumn, gridRow }}
                         onClick={() => openBookingSlot(res.id, hour)}
                         title="Disponível! Clique para agendar"
                       ></div>
                     );
-                  })}
-                </div>
-              ))}
+                  })
+                ];
+              })}
             </div>
           </div>
         </div>

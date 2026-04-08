@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bell, Search, User, X, LogOut } from 'lucide-react';
 import './Header.css';
 
-export default function Header({ searchQuery = '', onSearchChange }) {
+export default function Header({ searchQuery = '', onSearchChange, handleLogout }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
@@ -18,8 +18,8 @@ export default function Header({ searchQuery = '', onSearchChange }) {
           // Filtra agendamentos do futuro e pega os 3 mais próximos
           const now = new Date();
           const upcoming = data
-            .filter(b => b.startDate && new Date(b.startDate) > now)
-            .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+            .filter(b => b.startTime && new Date(b.startTime) > now)
+            .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
             .slice(0, 3);
           
           setNotifications(upcoming);
@@ -69,17 +69,17 @@ export default function Header({ searchQuery = '', onSearchChange }) {
               ) : (
                 <div className="notif-list">
                   {notifications.map(n => {
-                    const dataObj = new Date(n.startDate);
-                    const dataFormatada = dataObj.toLocaleDateString() + ' às ' + dataObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    return (
-                      <div key={n.id} className="notif-item">
-                        <div className="notif-dot"></div>
-                        <div className="notif-content">
-                          <strong>{n.resourceId || 'Sala Reservada'}</strong>
-                          <span>{dataFormatada}</span>
+                      const dataObj = new Date(n.startTime);
+                      const dataFormatada = dataObj.toLocaleDateString() + ' às ' + dataObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      return (
+                        <div key={n.id} className="notif-item">
+                          <div className="notif-dot"></div>
+                          <div className="notif-content">
+                            <strong>{n.location || 'Sala Reservada'}</strong>
+                            <span>{dataFormatada}</span>
+                          </div>
                         </div>
-                      </div>
-                    );
+                      );
                   })}
                 </div>
               )}

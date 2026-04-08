@@ -44,10 +44,10 @@ export default function Dashboard({ setAuth }) {
     setAuth(false);
   };
 
-  // Buscar agendamentos reais do Java
+  // Busca TODOS os agendamentos para exibir na timeline (independente de funcionário)
   const fetchBookings = async () => {
     try {
-      const res = await fetch("https://schedule-yi98.onrender.com/booking/all", {
+      const res = await fetch("https://schedule-yi98.onrender.com/booking/timeline", {
         headers: { "Authorization": "Bearer " + localStorage.getItem("my_token") }
       });
       if (res.ok) {
@@ -55,7 +55,7 @@ export default function Dashboard({ setAuth }) {
         setApiBookings(data || []);
       }
     } catch (e) {
-      console.error("Erro ao buscar API", e);
+      console.error("Erro ao buscar agendamentos", e);
     }
   };
 
@@ -117,11 +117,17 @@ export default function Dashboard({ setAuth }) {
       });
 
       if (res.ok) {
-        alert("Agendamento criado com sucesso no banco de dados!");
+        alert("✅ Agendamento criado com sucesso!");
         setIsBooking(false);
-        fetchBookings(); // Recarrega os blocos
+        fetchBookings();
       } else {
-        alert("O Backend recusou a criação. Status do erro: " + res.status);
+        // Tenta ler o motivo real do erro enviado pelo backend
+        const errorMsg = await res.text();
+        if (errorMsg.includes("already exists") || errorMsg.includes("Booking already")) {
+          alert("⚠️ Este horário já está ocupado para este local. Escolha outro horário.");
+        } else {
+          alert("Erro ao criar agendamento: " + (errorMsg || res.status));
+        }
       }
     } catch (e) {
       alert("Falha na comunicação com o servidor Spring Boot.");

@@ -96,6 +96,86 @@
   white-space: nowrap;
 }
 
+/* ─── Live Indicator ─────────────────────────────────────── */
+.timeline-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(43, 226, 138, 0.08);
+  border: 1px solid rgba(43, 226, 138, 0.25);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: #2BE28A;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(43, 226, 138, 0.6);
+  animation: livePulse 1.8s ease infinite;
+  flex-shrink: 0;
+}
+
+.live-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #2BE28A;
+}
+
+@keyframes livePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(43, 226, 138, 0.6); }
+  70%  { box-shadow: 0 0 0 7px rgba(43, 226, 138, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(43, 226, 138, 0); }
+}
+
+/* ─── Refresh Button ─────────────────────────────────────── */
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--surface-border);
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.refresh-btn svg {
+  transition: transform 0.6s ease;
+}
+
+.refresh-btn.spinning svg {
+  animation: spin 0.6s ease;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.last-updated {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
 /* ─── Timeline Grid ──────────────────────────────────────── */
 .timeline-container {
   flex: 1;

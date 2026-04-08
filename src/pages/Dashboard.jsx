@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, RefreshCw } from 'lucide-react';
 import './Dashboard.css';
 
 // Estes são os IDs que precisamos casar com o modelo do seu Backend (se string ou objeto).
@@ -38,14 +38,18 @@ export default function Dashboard({ setAuth }) {
   });
 
   const [apiBookings, setApiBookings] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const POLL_INTERVAL = 15000; // 15 segundos
 
   const handleLogout = () => {
     localStorage.removeItem("my_token");
     setAuth(false);
   };
 
-  // Busca TODOS os agendamentos para exibir na timeline (independente de funcionário)
-  const fetchBookings = async () => {
+  // Busca TODOS os agendamentos para exibir na timeline
+  const fetchBookings = useCallback(async (showRefreshAnim = false) => {
+    if (showRefreshAnim) setIsRefreshing(true);
     try {
       const res = await fetch("https://schedule-yi98.onrender.com/booking/timeline", {
         headers: { "Authorization": "Bearer " + localStorage.getItem("my_token") }
@@ -53,15 +57,28 @@ export default function Dashboard({ setAuth }) {
       if (res.ok) {
         const data = await res.json();
         setApiBookings(data || []);
+        setLastUpdated(new Date());
       }
     } catch (e) {
       console.error("Erro ao buscar agendamentos", e);
+    } finally {
+      if (showRefreshAnim) setTimeout(() => setIsRefreshing(false), 600);
     }
-  };
+  }, []);
 
+  // Polling a cada 15 segundos
   useEffect(() => {
-    fetchBookings();
-  }, [currentDateString]);
+    fetchBookings(false);
+    const interval = setInterval(() => fetchBookings(false), POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [currentDateString, fetchBookings]);
+
+  // Refetch quando o usuário volta para a aba
+  useEffect(() => {
+    const onFocus = () => fetchBookings(true);
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [fetchBookings]);
 
   // Filtra as reservas do array global que pertencem SÓ a data de "hoje"
   const getDailyBookings = () => {
@@ -164,7 +181,23 @@ export default function Dashboard({ setAuth }) {
               </button>
             </div>
             <div className="timeline-info">
-              <span className="badge-info">✨ Total agendamentos hoje: {dailyBookings.length}</span>
+              <div className="live-indicator">
+                <span className="live-dot"></span>
+                <span className="live-label">AO VIVO</span>
+              </div>
+              <span className="badge-info">✨ {dailyBookings.length} agendamento{dailyBookings.length !== 1 ? 's' : ''} hoje</span>
+              <button
+                className={`refresh-btn ${isRefreshing ? 'spinning' : ''}`}
+                onClick={() => fetchBookings(true)}
+                title="Atualizar agora"
+              >
+                <RefreshCw size={14} />
+                {lastUpdated && (
+                  <span className="last-updated">
+                    {lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
 

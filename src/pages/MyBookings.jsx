@@ -21,7 +21,7 @@ export default function MyBookings({ setAuth }) {
 
   const fetchMyBookings = async () => {
     try {
-      const res = await fetch("https://schedule-yi98.onrender.com/booking/all",  {
+      const res = await fetch("https://schedule-1-o6pj.onrender.com/booking/all",  {
         headers: {
            "Authorization": "Bearer " + localStorage.getItem("my_token")
         }
@@ -43,7 +43,7 @@ export default function MyBookings({ setAuth }) {
     if (!window.confirm("Atenção! Você deseja realmente cancelar este agendamento? Esta ação não pode ser desfeita.")) return;
 
     try {
-      const res = await fetch(`https://schedule-yi98.onrender.com/booking/delete/${id}`, {
+      const res = await fetch(`https://schedule-1-o6pj.onrender.com/booking/delete/${id}`, {
         method: "DELETE",
         headers: {
            "Authorization": "Bearer " + localStorage.getItem("my_token")

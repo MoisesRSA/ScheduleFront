@@ -52,7 +52,7 @@ export default function Dashboard({ setAuth }) {
   const fetchBookings = useCallback(async (showRefreshAnim = false) => {
     if (showRefreshAnim) setIsRefreshing(true);
     try {
-      const res = await fetch("https://schedule-yi98.onrender.com/booking/timeline", {
+      const res = await fetch("https://schedule-1-o6pj.onrender.com/booking/timeline", {
         headers: { "Authorization": "Bearer " + localStorage.getItem("my_token") }
       });
       if (res.ok) {
@@ -149,7 +149,7 @@ export default function Dashboard({ setAuth }) {
           status: "SCHEDULED"
       };
 
-      const res = await fetch("https://schedule-yi98.onrender.com/booking/create", {
+      const res = await fetch("https://schedule-1-o6pj.onrender.com/booking/create", {
         method: "POST",
         headers: { 
           "Authorization": "Bearer " + localStorage.getItem("my_token"),

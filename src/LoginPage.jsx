@@ -6,7 +6,7 @@ function LoginPage({ setAuth }) {
   const LoginSpring = async (credentialResponse) => {
     const tokenDoGoogle = credentialResponse.credential;
     try {
-      const resposta = await fetch("https://schedule-yi98.onrender.com/auth/login", {
+      const resposta = await fetch("https://schedule-1-o6pj.onrender.com/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ googleToken: tokenDoGoogle })

@@ -10,7 +10,7 @@ export default function Header({ searchQuery = '', onSearchChange, handleLogout 
     // Buscar os agendamentos da API para mostrar como "Lembretes" futuros
     const fetchUpcoming = async () => {
       try {
-        const res = await fetch("https://schedule-yi98.onrender.com/booking/all", {
+        const res = await fetch("https://schedule-1-o6pj.onrender.com/booking/all", {
           headers: { "Authorization": "Bearer " + localStorage.getItem("my_token") }
         });
         if (res.ok) {

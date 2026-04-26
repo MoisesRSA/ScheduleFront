@@ -82,7 +82,7 @@ export default function Dashboard({ setAuth }) {
   const fetchBookings = useCallback(async (showRefreshAnim = false) => {
     if (showRefreshAnim) setIsRefreshing(true);
     try {
-      const res = await fetch("http://localhost:8080/booking/timeline", {
+      const res = await fetch("https://schedule-1-o6pj.onrender.com/booking/timeline", {
         headers: { "Authorization": "Bearer " + localStorage.getItem("my_token") }
       });
       if (res.ok) {
@@ -109,7 +109,7 @@ export default function Dashboard({ setAuth }) {
     if (!token) return;
 
     // Conecta no endpoint de Server-Sent Events do backend
-    const eventSource = new EventSource(`http://localhost:8080/booking/stream?token=${token}`);
+    const eventSource = new EventSource(`https://schedule-1-o6pj.onrender.com/booking/stream?token=${token}`);
     
     // Ouve especificamente eventos chamados "bookingUpdate"
     eventSource.addEventListener("bookingUpdate", (e) => {
@@ -234,7 +234,7 @@ export default function Dashboard({ setAuth }) {
           status: "SCHEDULED"
       };
 
-      const res = await fetch("http://localhost:8080/booking/create", {
+      const res = await fetch("https://schedule-1-o6pj.onrender.com/booking/create", {
         method: "POST",
         headers: { 
           "Authorization": "Bearer " + localStorage.getItem("my_token"),

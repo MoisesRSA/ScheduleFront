@@ -6,9 +6,9 @@ import './Dashboard.css';
 
 // Estes são os IDs que precisamos casar com o modelo do seu Backend (se string ou objeto).
 const RESOURCES = [
-  { id: 'room-a', name: 'Sala de reunião' },
+  { id: 'room-a', name: 'Sala de Reunião' },
   { id: 'room-b', name: 'Biblioteca' },
-  { id: 'laboratory', name: 'Loboratório' },
+  { id: 'laboratory', name: 'Laboratório' },
   { id: 'court', name: 'Quadra' },
 ];
 
@@ -41,6 +41,7 @@ export default function Dashboard({ setAuth }) {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const POLL_INTERVAL = 15000; // 15 segundos
 
   const handleLogout = () => {
@@ -61,7 +62,10 @@ export default function Dashboard({ setAuth }) {
   // Extrai a hora LOCAL de uma string de data/hora
   const getLocalHour = (dateStr) => {
     const normalized = normalizeDateTime(dateStr);
-    return new Date(normalized).getHours();
+    const d = new Date(normalized);
+    if (d.getSeconds() === 59) d.setSeconds(d.getSeconds() + 1); // Arredonda 10:59:59 para 11:00:00 para grid
+    if (d.getSeconds() === 1) d.setSeconds(d.getSeconds() - 1); // Arredonda 10:00:01 para 10:00:00 para grid
+    return d.getHours();
   };
 
   // Extrai apenas a parte da data (YYYY-MM-DD) no fuso local
@@ -159,24 +163,55 @@ export default function Dashboard({ setAuth }) {
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
 
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     // Validação: impede agendamento no passado (caso o usuário edite o datetime manualmente)
     const startDate = new Date(bookingData.startTime);
     if (startDate < new Date()) {
       alert('⚠️ Não é possível agendar um horário que já passou.');
+      setIsSubmitting(false);
       return;
     }
     // Validação: fim deve ser depois do início
     const endDate = new Date(bookingData.endTime);
     if (endDate <= startDate) {
       alert('⚠️ O horário de fim deve ser após o horário de início.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validação de conflito no front-end para evitar sobreposições reais
+    const hasConflict = apiBookings.some(b => {
+      if (b.location !== bookingData.location) return false;
+      const bStart = new Date(b.startTime);
+      const bEnd = new Date(b.endTime);
+      // Conflito verdadeiro: novo inicio antes do fim existente E novo fim depois do inicio existente
+      return startDate < bEnd && endDate > bStart;
+    });
+
+    if (hasConflict) {
+      alert('⚠️ Este horário entra em conflito com um agendamento já existente.');
+      setIsSubmitting(false);
       return;
     }
 
     try {
+      // Ajuste para contornar o bug do backend que acusa conflito em horários adjacentes.
+      // Adicionamos 1 segundo ao início e subtraímos 1 segundo do fim.
+      const pad = (n) => String(n).padStart(2, '0');
+      const buildLocalISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+      const adjustedStartDate = new Date(startDate);
+      adjustedStartDate.setSeconds(adjustedStartDate.getSeconds() + 1);
+
+      const adjustedEndDate = new Date(endDate);
+      adjustedEndDate.setSeconds(adjustedEndDate.getSeconds() - 1);
+
       const payloadToSend = {
           location: bookingData.location,
-          startTime: bookingData.startTime,
-          endTime: bookingData.endTime,
+          startTime: buildLocalISO(adjustedStartDate),
+          endTime: buildLocalISO(adjustedEndDate),
           status: "SCHEDULED"
       };
 
@@ -204,6 +239,8 @@ export default function Dashboard({ setAuth }) {
       }
     } catch (e) {
       alert("Falha na comunicação com o servidor Spring Boot.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -330,9 +367,13 @@ export default function Dashboard({ setAuth }) {
                               {booking.employeeName || 'Funcionário'}
                             </strong>
                             <span className="booking-time">
-                              {new Date(booking.startTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                              {' – '}
-                              {new Date(booking.endTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              {(() => {
+                                const startD = new Date(booking.startTime);
+                                if (startD.getSeconds() === 1) startD.setSeconds(startD.getSeconds() - 1);
+                                const endD = new Date(booking.endTime);
+                                if (endD.getSeconds() === 59) endD.setSeconds(endD.getSeconds() + 1);
+                                return `${startD.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} – ${endD.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+                              })()}
                             </span>
                           </div>
                         </div>
@@ -412,8 +453,8 @@ export default function Dashboard({ setAuth }) {
                 ></textarea>
               </div>
 
-              <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%', justifyContent: 'center' }}>
-                Concluir Agendamento
+              <button type="submit" className="btn-primary" style={{ marginTop: '8px', width: '100%', justifyContent: 'center' }} disabled={isSubmitting}>
+                {isSubmitting ? 'Agendando...' : 'Concluir Agendamento'}
               </button>
             </form>
           </div>

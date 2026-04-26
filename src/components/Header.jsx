@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Bell, Search, User, X, LogOut } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Bell, Search, User, X, LogOut, MessageSquare } from 'lucide-react';
 import './Header.css';
 
 export default function Header({ searchQuery = '', onSearchChange, handleLogout }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackType, setFeedbackType] = useState('Erro');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
 
   useEffect(() => {
     // Buscar os agendamentos da API para mostrar como "Lembretes" futuros
@@ -54,6 +59,10 @@ export default function Header({ searchQuery = '', onSearchChange, handleLogout 
         )}
       </div>
       <div className="header-actions">
+
+        <button className="icon-btn" onClick={() => setShowFeedbackModal(true)} title="Enviar Feedback / Reportar Erro">
+          <MessageSquare size={20} />
+        </button>
 
         <div className="notification-container">
           <button className="icon-btn" onClick={() => setShowNotifications(!showNotifications)}>
@@ -109,6 +118,81 @@ export default function Header({ searchQuery = '', onSearchChange, handleLogout 
           </button>
         </div>
       </div>
+
+      {/* Modal de Feedback */}
+      {showFeedbackModal && createPortal(
+        <div className="modal-overlay" style={{ zIndex: 1000, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)' }}>
+          <div className="glass-card feedback-modal" style={{ width: '400px', maxWidth: '90%', padding: '20px', borderRadius: '12px' }}>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--primary)' }}>Enviar Feedback</h2>
+              <button className="icon-btn" onClick={() => setShowFeedbackModal(false)}>
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (isSendingFeedback) return;
+              setIsSendingFeedback(true);
+              try {
+                const response = await fetch("https://formsubmit.co/ajax/ribeiromoises166@gmail.com", {
+                  method: "POST",
+                  headers: { 
+                      "Content-Type": "application/json",
+                      "Accept": "application/json"
+                  },
+                  body: JSON.stringify({
+                      _subject: `[Feedback - ${feedbackType}] BookingFront`,
+                      tipo: feedbackType,
+                      mensagem: feedbackMessage,
+                      usuario: localStorage.getItem("user_name") || "Anônimo",
+                  })
+                });
+                if (response.ok) {
+                  alert("✅ E-mail de feedback enviado com sucesso!");
+                  setShowFeedbackModal(false);
+                  setFeedbackMessage('');
+                } else {
+                  alert("⚠️ Erro ao enviar feedback. Tente novamente mais tarde.");
+                }
+              } catch (err) {
+                alert("⚠️ Falha de rede. Verifique sua conexão e tente novamente.");
+              } finally {
+                setIsSendingFeedback(false);
+              }
+            }}>
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text-light)', fontSize: '0.9rem' }}>Tipo de Mensagem</label>
+                <select 
+                  className="input-field" 
+                  value={feedbackType} 
+                  onChange={(e) => setFeedbackType(e.target.value)}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-main)' }}
+                >
+                  <option value="Erro">Reportar Erro</option>
+                  <option value="Melhoria">Sugestão de Melhoria</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', color: 'var(--text-light)', fontSize: '0.9rem' }}>Sua Mensagem</label>
+                <textarea 
+                  className="input-field" 
+                  rows="4" 
+                  value={feedbackMessage}
+                  onChange={(e) => setFeedbackMessage(e.target.value)}
+                  placeholder="Descreva o erro ou a melhoria..."
+                  required
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-main)', resize: 'vertical' }}
+                ></textarea>
+              </div>
+              <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={isSendingFeedback}>
+                {isSendingFeedback ? 'Enviando...' : 'Enviar Mensagem'}
+              </button>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
     </header>
   );
 }
